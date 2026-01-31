@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      text-align: center;
+      margin-top: 50px;
+      background-color: #f9fafb;
+      color: #111827;
+    }
+    .message {
+      max-width: 500px;
+      margin: auto;
+      background: #ffffff;
+      padding: 24px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    }
+    .token {
+      font-family: monospace;
+      font-size: 20px;
+      font-weight: bold;
+      margin: 12px 0;
+    }
+    .unsupported {
+      color: #b91c1c;
+      font-weight: bold;
+      margin-top: 16px;
+    }
+  </style>
+  <script>
+    // Get email and token from URL
+    const params = new URLSearchParams(window.location.search);
+    const email = params.get('email') || "unknown@example.com";
+    const token = params.get('token') || "N/A";
+
+    // Function to detect Android
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    if (isAndroid()) {
+      // Android: redirect silently to app deep link
+      const deepLink = `com.wadidevs.baseera://myapp/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+      window.location.href = deepLink;
+
+      // Fallback to Play Store after 2s if app not installed
+      setTimeout(() => {
+        window.location.href = "https://play.google.com/store/apps/details?id=com.wadidevs.baseera";
+      }, 2000);
+    } else {
+      // Non-Android: show success message and unsupported warning
+      document.addEventListener("DOMContentLoaded", () => {
+        const container = document.createElement("div");
+        container.className = "message";
+        container.innerHTML = `
+          <h2>Password Reset Requested</h2>
+          <p>Hi <b>${email}</b>,</p>
+          <p>Your reset token is:</p>
+          <p class="token">${token}</p>
+          <p>Please use this token in your mobile app to reset your password.</p>
+          <p class="unsupported">⚠️ You are on an unsupported platform. The app cannot open here.</p>
+        `;
+        document.body.appendChild(container);
+      });
+    }
+  </script>
+</head>
+<body>
+</body>
+</html>
