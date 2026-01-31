@@ -1,1 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Email Confirmed</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      background: white;
+      border-radius: 16px;
+      padding: 40px;
+      text-align: center;
+      max-width: 420px;
+      width: 100%;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+    }
+
+    .icon {
+      width: 80px;
+      height: 80px;
+      background: #10b981;
+      border-radius: 50%;
+      margin: 0 auto 25px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .icon svg {
+      width: 40px;
+      height: 40px;
+      color: white;
+    }
+
+    h1 {
+      color: #1f2937;
+      font-size: 28px;
+      margin-bottom: 14px;
+      font-weight: 600;
+    }
+
+    .message {
+      color: #6b7280;
+      font-size: 16px;
+      line-height: 1.5;
+    }
+
+    @media (max-width: 480px) {
+      .container {
+        padding: 30px 20px;
+      }
+
+      h1 {
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon">
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+      </svg>
+    </div>
+
+    <h1>Email Confirmed</h1>
+
+    <div class="message">
+      Your email has been successfully verified.<br />
+      Redirecting to the app…
+    </div>
+  </div>
+
+  <script>
+    const APP_DEEP_LINK = "com.example.baseera://myapp/signInScreen";
+    const PLAY_STORE_URL =
+      "https://play.google.com/store/apps/details?id=com.example.baseera";
+
+    function isAndroid() {
+      return /Android/i.test(navigator.userAgent);
+    }
+
+    function openAppWithFallback() {
+      const startTime = Date.now();
+
+    
+      window.location.href = APP_DEEP_LINK;
+
+      setTimeout(() => {
+        if (Date.now() - startTime < 2200) {
+          window.location.href = PLAY_STORE_URL;
+        }
+      }, 2000);
+    }
+
+    if (isAndroid()) {
+      setTimeout(openAppWithFallback, 1200);
+    }
+    
+  </script>
+</body>
+</html>
 
