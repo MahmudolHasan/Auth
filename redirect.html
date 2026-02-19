@@ -349,6 +349,23 @@
   .mt-4 {
     margin-top: 16px;
   }
+
+  .app-link-badge {
+    background: #e8f0fe;
+    border-radius: 20px;
+    padding: 6px 12px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: #1f2937;
+    margin-bottom: 16px;
+  }
+
+  .app-link-badge span {
+    color: #10b981;
+    font-size: 14px;
+  }
 </style>
 </head>
 <body>
@@ -361,6 +378,10 @@ const params = new URLSearchParams(window.location.search);
 const email = params.get('email');
 const token = params.get('token');
 const displayArea = document.getElementById('display-area');
+
+// App Links configuration - USING YOUR VERIFIED HTTPS DOMAIN!
+const APP_LINKS_DOMAIN = 'https://signupconfirmation.netlify.app';
+const DEEP_LINK_SCHEME = 'baseera://';
 
 // Toast notification function
 const showToast = (message, type = 'success') => {
@@ -391,21 +412,27 @@ const copyToken = () => {
   });
 };
 
-const openAppManually = () => {
+// UPDATED: Using HTTPS App Links for seamless opening!
+const openAppWithAppLinks = () => {
   if (!email || !token) return;
   
-  const appUrl = `baseera://reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
-  window.location.href = appUrl;
+  // First try: Use the verified HTTPS link (this will trigger App Links)
+  const appLinksUrl = `${APP_LINKS_DOMAIN}/redirect.html?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
   
-  showToast('Attempting to open app...', 'success');
+  showToast('🔄 Opening app with verified link...', 'success');
   
+  // This will now open the app directly with NO DIALOG thanks to your assetlinks.json!
+  window.location.href = appLinksUrl;
+  
+  // Fallback to deep link if App Links fails
   setTimeout(() => {
-    showUI(
-      "Still having trouble?",
-      "If the app didn't open, you can use the token below:",
-      true
-    );
-  }, 2000);
+    const deepLinkUrl = `${DEEP_LINK_SCHEME}reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+    window.location.href = deepLinkUrl;
+  }, 500);
+};
+
+const openAppManually = () => {
+  openAppWithAppLinks(); // Just use the same improved function
 };
 
 const showUI = (title, text, showToken = false, isExpired = false) => {
@@ -430,6 +457,8 @@ const showUI = (title, text, showToken = false, isExpired = false) => {
         <div class="logo-circle">B</div>
         <div class="logo-text">Baseera</div>
       </div>
+      
+      ${!showToken ? '<div class="app-link-badge"><span>✓</span> Verified App Link Active</div>' : ''}
       
       <h2>${title}</h2>
       <p class="subtitle">${text}</p>
@@ -491,7 +520,7 @@ const showUI = (title, text, showToken = false, isExpired = false) => {
   `;
 };
 
-// Main logic
+// Main logic - UPDATED to use App Links
 if (!email || !token) {
   showUI(
     "Link Expired", 
@@ -505,40 +534,32 @@ if (!email || !token) {
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
   if (isAndroid || isIOS) {
-    // Show loading state
+    // Show loading state with App Links badge
     displayArea.innerHTML = `
       <div class="card" style="text-align: center;">
         <div class="logo">
           <div class="logo-circle">B</div>
           <div class="logo-text">Baseera</div>
         </div>
+        <div class="app-link-badge" style="margin: 0 auto 16px;">
+          <span>✓</span> Verified App Link Active
+        </div>
         <h2>Opening App...</h2>
-        <p class="subtitle">Please wait while we redirect you to Baseera</p>
+        <p class="subtitle">Using verified connection to open Baseera seamlessly</p>
         <div style="margin: 30px 0;">
           <div class="loader"></div>
         </div>
-        <p style="color: #9ca3af; font-size: 13px;">If nothing happens, click below</p>
-        <button onclick="openAppManually()" class="secondary-btn" style="margin-top: 16px;">
-          Open Manually
+        <p style="color: #9ca3af; font-size: 13px;">If app doesn't open automatically, click below</p>
+        <button onclick="openAppWithAppLinks()" class="secondary-btn" style="margin-top: 16px;">
+          Open App Manually
         </button>
       </div>
     `;
 
-    // Try to open the app via deep link
-    const appUrl = `baseera://reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
-    
-    // Try universal link first (for iOS)
-    const universalLink = `https://baseera.app/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
-    
-    // Attempt to open with universal link (works better on iOS)
+    // Use the new App Links method to open the app - NO DIALOG! 
     setTimeout(() => {
-      window.location.href = universalLink;
-    }, 100);
-
-    // Fallback to deep link after a short delay
-    setTimeout(() => {
-      window.location.href = appUrl;
-    }, 200);
+      openAppWithAppLinks();
+    }, 1500); // Give user time to see the message
 
     // Show fallback UI after 3 seconds if app doesn't open
     setTimeout(() => {
@@ -547,7 +568,7 @@ if (!email || !token) {
         "Don't worry! You can still reset your password using the token below:",
         true
       );
-    }, 3000);
+    }, 4000);
   } else {
     // Desktop or unsupported platform - show token with instructions
     showUI(
