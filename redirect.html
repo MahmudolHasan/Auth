@@ -3,12 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Password Reset</title>
+  <title>Opening Baseera...</title>
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       background-color: #f9fafb;
-      color: #111827;
       margin: 0;
       height: 100vh;
       display: flex;
@@ -16,81 +15,88 @@
       align-items: center;
     }
     .message {
-      max-width: 500px;
-      width: 90%;
+      max-width: 400px;
+      width: 85%;
       background: #ffffff;
-      padding: 24px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
       text-align: center;
     }
+    h2 { color: #111827; margin-top: 0; }
+    p { color: #4b5563; line-height: 1.5; }
     .token {
+      background: #f3f4f6;
+      padding: 10px;
+      border-radius: 8px;
       font-family: monospace;
-      font-size: 20px;
+      font-size: 18px;
       font-weight: bold;
-      margin: 12px 0;
+      color: #059669;
+      margin: 15px 0;
     }
-    lottie-player {
-      width: 180px;
-      height: 180px;
-      margin-bottom: 16px;
+    .btn {
+      display: inline-block;
+      margin-top: 20px;
+      padding: 12px 24px;
+      background-color: #10b981;
+      color: white;
+      text-decoration: none;
+      border-radius: 8px;
+      font-weight: 600;
     }
   </style>
-  <!-- Lottie Player -->
-  <script src="https://unpkg.com/@lottiefiles/lottie-player@latest/dist/lottie-player.js"></script>
 </head>
 <body>
+
+<div id="display-area">
+    <div class="message">
+        <h2>Connecting to App...</h2>
+        <p>Please wait while we secure your account.</p>
+    </div>
+</div>
+
 <script>
   const params = new URLSearchParams(window.location.search);
   const email = params.get('email');
   const token = params.get('token');
+  const displayArea = document.getElementById('display-area');
+
+  const showUI = (title, text, showToken = false) => {
+    displayArea.innerHTML = `
+      <div class="message">
+        <h2>${title}</h2>
+        <p>${text}</p>
+        ${showToken ? `<div class="token">${token}</div>` : ''}
+        ${showToken ? `<p style="font-size:12px">Copy this code if the app asks for it.</p>` : ''}
+        <a href="/" class="btn">Go Back</a>
+      </div>
+    `;
+  };
 
   const userAgent = navigator.userAgent || navigator.vendor || window.opera;
   const isAndroid = /Android/i.test(userAgent);
-  const isIOS = /iPhone|iPad|iPod/i.test(userAgent);
-
-  const createMessage = (title, text, showToken = false) => {
-    const container = document.createElement("div");
-    container.className = "message";
-    container.innerHTML = `
-      <lottie-player
-        src="/warning.json"
-        background="transparent"
-        speed="1"
-        loop
-        autoplay>
-      </lottie-player>
-      <h2>${title}</h2>
-      <p>${text}</p>
-      ${showToken ? `<p class="token">Token: ${token}</p>` : ''}
-    `;
-    document.body.appendChild(container);
-  };
 
   if (!email || !token) {
-    document.addEventListener("DOMContentLoaded", () => {
-      createMessage("Invalid Request", "Required parameters are missing. Please try the password reset process again.");
-    });
+    showUI("Link Expired", "This reset link is missing information. Please request a new one from the app.");
   } 
   else if (isAndroid) {
-    const deepLink = `com.wadidevs.baseera://myapp/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
-    window.location.href = deepLink;
+    // This uses the "Intent" protocol which is better than raw schemes
+    // It tells Chrome: "Open this app, if not found, go to Play Store"
+    const packageName = "com.wadidevs.baseera";
+    const scheme = "com.wadidevs.baseera";
+    const intentUrl = `intent://myapp/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}#Intent;scheme=${scheme};package=${packageName};S.browser_fallback_url=https://play.google.com/store/apps/details?id=${packageName};end`;
+
+    window.location.href = intentUrl;
+    
+    // If they are still here after 3 seconds, show the manual token
     setTimeout(() => {
-      window.location.href = "https://play.google.com/store/apps/details?id=com.wadidevs.baseera";
-    }, 2000);
-  }
-  else if (isIOS) {
-    document.addEventListener("DOMContentLoaded", () => {
-      createMessage("iOS Support Not Available", "The automatic app opening for iOS is not implemented yet. Please try the alternative method manually.", true);
-    });
-  }
+        showUI("Taking a while?", "If the app didn't open automatically, you can use the token below manually.", true);
+    }, 3000);
+  } 
   else {
-    document.addEventListener("DOMContentLoaded", () => {
-      createMessage("Unsupported Platform", "This platform cannot open the app automatically. Please manually enter your token in the mobile app.", true);
-    });
+    // iOS or Desktop fallback
+    showUI("Manual Reset", "Please open the Baseera app and enter this token to complete your password reset:", true);
   }
 </script>
 </body>
