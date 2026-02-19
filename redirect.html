@@ -35,71 +35,56 @@
       color: #059669;
       margin: 15px 0;
     }
-    .btn {
-      display: inline-block;
-      margin-top: 20px;
-      padding: 12px 24px;
-      background-color: #10b981;
-      color: white;
-      text-decoration: none;
-      border-radius: 8px;
-      font-weight: 600;
-    }
   </style>
 </head>
 <body>
-
 <div id="display-area">
-    <div class="message">
-        <h2>Connecting to App...</h2>
-        <p>Please wait while we secure your account.</p>
-    </div>
+  <div class="message">
+    <h2>Connecting to App...</h2>
+    <p>Please wait while we secure your account.</p>
+  </div>
 </div>
 
 <script>
-  const params = new URLSearchParams(window.location.search);
-  const email = params.get('email');
-  const token = params.get('token');
-  const displayArea = document.getElementById('display-area');
+const params = new URLSearchParams(window.location.search);
+const email = params.get('email');
+const token = params.get('token');
+const displayArea = document.getElementById('display-area');
 
-  const showUI = (title, text, showToken = false) => {
-    displayArea.innerHTML = `
-      <div class="message">
-        <h2>${title}</h2>
-        <p>${text}</p>
-        ${showToken ? `<div class="token">${token}</div>` : ''}
-        ${showToken ? `<p style="font-size:12px">Copy this code if the app asks for it.</p>` : ''}
-       
-      </div>
-    `;
+const showUI = (title, text, showToken = false) => {
+  displayArea.innerHTML = `
+    <div class="message">
+      <h2>${title}</h2>
+      <p>${text}</p>
+      ${showToken ? `<div class="token">${token}</div>` : ''}
+      ${showToken ? `<p style="font-size:12px">Copy this code if the app asks for it.</p>` : ''}
+    </div>
+  `;
+};
+
+if (!email || !token) {
+  showUI("Link Expired", "This reset link is missing information. Please request a new one from the app.");
+} else {
+  // Universal link / App Link URL (matches your intent-filter)
+  const appLink = `https://signupconfirmation.netlify.app/redirect.html?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+
+  // For Android / iOS: open app automatically using the HTTPS link
+  const openApp = () => {
+    window.location.href = appLink;
   };
 
-  const userAgent = navigator.userAgent || navigator.vendor || window.opera;
-  const isAndroid = /Android/i.test(userAgent);
+  // Try opening app immediately
+  openApp();
 
-  if (!email || !token) {
-    showUI("Link Expired", "This reset link is missing information. Please request a new one from the app.");
-  } 
-  else if (isAndroid) {
-    // This uses the "Intent" protocol which is better than raw schemes
-    // It tells Chrome: "Open this app, if not found, go to Play Store"
-    const packageName = "com.wadidevs.baseera";
-    const scheme = "com.wadidevs.baseera";
-    const intentUrl = `intent://myapp/reset-password?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}#Intent;scheme=${scheme};package=${packageName};S.browser_fallback_url=https://play.google.com/store/apps/details?id=${packageName};end`;
-
-    window.location.href = intentUrl;
-    
-    // If they are still here after 3 seconds, show the manual token
-    setTimeout(() => {
-        showUI("Taking a while?", "If the app didn't open automatically, you can use the token below manually.", true);
-    }, 3000);
-  } 
-  else {
-    // iOS or Desktop fallback
-    showUI("Manual Reset", "Please open the Baseera app and enter this token to complete your password reset:", true);
-  }
+  // After 2 seconds, show token manually if app didn’t open
+  setTimeout(() => {
+    showUI(
+      "App did not open?",
+      "If the app didn't open automatically, you can use the token below manually:",
+      true
+    );
+  }, 2000);
+}
 </script>
 </body>
 </html>
-
-

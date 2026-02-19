@@ -1,0 +1,13 @@
+[
+  {
+    "relation": ["delegate_permission/common.handle_all_urls"],
+    "target": {
+      "namespace": "android_app",
+      "package_name": "com.wadidevs.baseera",
+      "sha256_cert_fingerprints": [
+        "5303125575F99704E0AC8EBABE873D0F11D5859C50A9F204CD651D68DC8DC45F"
+      ]
+    }
+  }
+]
+
