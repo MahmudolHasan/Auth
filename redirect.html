@@ -1,41 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Opening Baseera...</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      background-color: #f9fafb;
-      margin: 0;
-      height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-    }
-    .message {
-      max-width: 400px;
-      width: 85%;
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 16px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-      text-align: center;
-    }
-    h2 { color: #111827; margin-top: 0; }
-    p { color: #4b5563; line-height: 1.5; }
-    .token {
-      background: #f3f4f6;
-      padding: 10px;
-      border-radius: 8px;
-      font-family: monospace;
-      font-size: 18px;
-      font-weight: bold;
-      color: #059669;
-      margin: 15px 0;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Opening Baseera...</title>
+<style>
+  body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background-color: #f9fafb;
+    margin: 0;
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  .message {
+    max-width: 400px;
+    width: 85%;
+    background: #ffffff;
+    padding: 30px;
+    border-radius: 16px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    text-align: center;
+  }
+  h2 { color:#111827; margin-top:0; }
+  p { color:#4b5563; line-height:1.5; }
+  .token-box {
+    background:#f3f4f6;
+    padding:10px;
+    border-radius:8px;
+    font-family: monospace;
+    font-size:18px;
+    font-weight:bold;
+    color:#059669;
+    margin:15px 0;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+  }
+  .copy-btn {
+    padding: 4px 8px;
+    margin-left: 10px;
+    background: #10b981;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+</style>
 </head>
 <body>
 <div id="display-area">
@@ -56,34 +68,49 @@ const showUI = (title, text, showToken = false) => {
     <div class="message">
       <h2>${title}</h2>
       <p>${text}</p>
-      ${showToken ? `<div class="token">${token}</div>` : ''}
-      ${showToken ? `<p style="font-size:12px">Copy this code if the app asks for it.</p>` : ''}
+      ${
+        showToken 
+        ? `<div class="token-box">
+             <span id="token-text">${token}</span>
+             <button class="copy-btn" onclick="copyToken()">Copy</button>
+           </div>` 
+        : ''
+      }
     </div>
   `;
+};
+
+const copyToken = () => {
+  const tokenText = document.getElementById('token-text');
+  navigator.clipboard.writeText(tokenText.textContent).then(() => {
+    alert('Token copied to clipboard!');
+  });
 };
 
 if (!email || !token) {
   showUI("Link Expired", "This reset link is missing information. Please request a new one from the app.");
 } else {
-  // Universal link / App Link URL (matches your intent-filter)
-  const appLink = `https://signupconfirmation.netlify.app/redirect.html?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+  const ua = navigator.userAgent || navigator.vendor || window.opera;
+  const isAndroid = /Android/i.test(ua);
+  const isIOS = /iPhone|iPad|iPod/i.test(ua);
 
-  // For Android / iOS: open app automatically using the HTTPS link
-  const openApp = () => {
-    window.location.href = appLink;
-  };
+  if (isAndroid || isIOS) {
+    // Open app via App Link / deep link
+    const appUrl = `https://signupconfirmation.netlify.app/redirect.html?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`;
+    window.location.href = appUrl;
 
-  // Try opening app immediately
-  openApp();
-
-  // After 2 seconds, show token manually if app didn’t open
-  setTimeout(() => {
+    // Fallback in 2 seconds
+    setTimeout(() => {
+      showUI("App did not open?", "If the app didn't open automatically, you can use the token below manually:", true);
+    }, 2000);
+  } else {
+    // Unsupported platform: show token with copy button
     showUI(
-      "App did not open?",
-      "If the app didn't open automatically, you can use the token below manually:",
+      "Unsupported Platform",
+      "It looks like you are on a platform that cannot open the Baseera app automatically. Use the token below manually:",
       true
     );
-  }, 2000);
+  }
 }
 </script>
 </body>
